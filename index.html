@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Unabhängiger deutscher Browser der amtlichen Spezialitätenliste: Packungen, Original-Limitierungen und getrennte Publikumspreise und Fabrikabgabepreise. Stand 01.10.2026.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="theme-color" content="#100d16"><title>Spezialitätenliste · SL Browser</title>
+<link rel="icon" href="./favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="./src/styles.css">
+<script type="module" src="./src/app.js"></script>
+</head>
+<body>
+<header class="topbar"><a class="brand" href="./"><span class="brand-mark">SL</span><span>SL Browser<span class="brand-sub">Spezialitätenliste</span></span></a><a href="#collection">Sammlung <span id="collection-count">0</span></a></header>
+<nav class="catalog-switch" aria-label="Katalog wechseln"><a href="https://wakuwakumiwaku.github.io/dentotar/">DENTOTAR</a><a href="https://wakuwakumiwaku.github.io/migel/">MiGeL</a><a href="https://wakuwakumiwaku.github.io/spezialitaetenliste/" aria-current="page">Spezialitätenliste</a></nav>
+<div id="storage-warning" class="warning" role="status" hidden></div>
+<main class="workspace">
+<aside class="filters panel" aria-labelledby="filter-heading"><h2 id="filter-heading">Eingrenzen</h2><button id="filter-toggle" class="filter-toggle" aria-expanded="false">Filter anzeigen</button>
+<label>Liste<select id="list"><option value="">Alle Listen</option></select></label>
+<label>ATC-Gruppe<select id="atc"><option value="">Alle ATC-Gruppen</option></select></label>
+<label>Zulassungsinhaberin<select id="manufacturer"><option value="">Alle Anbieterinnen</option></select></label>
+<label>Charakteristikum<select id="type"><option value="">Alle / nicht angegeben</option></select></label>
+<label>Weitere Auswahl<select id="scope"><option value="">Alle Packungen</option><option value="favorites">Nur Favoriten</option><option value="limitations">Mit Limitierung</option><option value="missing">Preis unvollständig</option></select></label>
+<button id="reset">Filter zurücksetzen</button><p class="source-note">Quelle: BAG<br>Publikation <strong>01.10.2026</strong><br>SL · GGSL · GGML</p><button id="source-open">Quellen & Datenstand</button></aside>
+<section class="catalog" aria-labelledby="catalog-title"><div class="intro"><h1 id="catalog-title">Packungen finden</h1><span class="badge">01.10.2026</span></div>
+<label class="search-label" for="search">Name, Wirkstoff, ATC, GTIN oder Swissmedic-Code</label><input id="search" type="search" placeholder="z. B. Dafalgan, Lamivudin, J05AF05 …" autocomplete="off">
+<div class="results-bar"><p id="result-count" role="status">Amtlicher Katalog wird geladen …</p><label>Sortierung<select id="sort"><option value="name">Name</option><option value="retail">Publikumspreis ↑</option><option value="factory">Fabrikabgabepreis ↑</option></select></label></div>
+<div id="load-error" class="warning" hidden></div><div id="results" aria-busy="true"></div><nav class="pagination" aria-label="Ergebnisseiten"><button id="previous" disabled>← Zurück</button><span id="page-info"></span><button id="next" disabled>Weiter →</button></nav>
+</section>
+<aside id="collection" class="collection panel" aria-labelledby="collection-heading"><div class="section-title"><h2 id="collection-heading">Sammlung & Vergleich</h2><button id="print">Drucken</button></div><p class="source-note">Menge = Anzahl Packungen. Nur Preisvergleich, keine Austausch- oder Therapieempfehlung.</p><div id="collection-lines"></div><div id="totals" aria-live="polite"></div><label>Notiz zur Sammlung<textarea id="workspace-note" maxlength="10000" rows="2" placeholder="Keine Patientendaten eintragen"></textarea></label><div class="actions"><button id="export-json">JSON sichern</button><button id="export-csv">CSV sichern</button><label class="button" for="import-file">JSON / CSV laden</label><input id="import-file" type="file" accept=".json,.csv,application/json,text/csv" class="sr-only"><button id="clear">Sammlung leeren</button></div><p class="source-note">Nur lokal in diesem Browser. Exporte bleiben bei Ihnen; keine Übertragung. Preise werden aus dem gebündelten Quellenstand neu ermittelt.</p></aside>
+</main>
+<footer>Unabhängige Referenz und Packungspreisvergleich. Keine garantierte Vergütung, keine Dosierungsberatung. Keine Patientendaten. <button id="source-footer">Quellen & Grenzen</button> · <a href="https://github.com/wakuwakumiwaku/spezialitaetenliste">Quellcode</a></footer>
+<dialog id="detail-dialog" aria-labelledby="detail-title"><div class="dialog-head"><h2 id="detail-title">Packungsdetails</h2><button id="detail-close" aria-label="Details schliessen">Schliessen ×</button></div><div id="detail-body"></div></dialog>
+<dialog id="source-dialog" aria-labelledby="source-title"><div class="dialog-head"><h2 id="source-title">Quellen & Datenstand</h2><button id="source-close">Schliessen ×</button></div><div id="source-body"></div></dialog>
+<dialog id="import-dialog" aria-labelledby="import-title"><h2 id="import-title">Sammlung ersetzen?</h2><p id="import-summary"></p><p>Alle Einträge werden vorab geprüft. Unbekannte Kennungen bleiben als ungeklärte Positionen erhalten; importierte Preisfelder werden niemals als Katalogpreise übernommen.</p><div class="actions"><button id="backup-before-import">Vorherigen Speicherstand sichern</button><button id="import-confirm" class="primary">Geprüften Stand ersetzen</button><button id="import-cancel">Abbrechen</button></div></dialog>
+<div id="toast" role="status" hidden></div><section id="print-view"></section>
+<noscript>Für die lokale Suche und Sammlung muss JavaScript aktiviert sein. Die Originalpublikation ist unter <a href="./data/foph-sl-publication-20261001-de.xlsx">BAG XLSX 01.10.2026</a> verfügbar.</noscript>
+</body></html>
