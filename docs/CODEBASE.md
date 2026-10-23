@@ -18,6 +18,7 @@
 | `tests/test_import_catalog.py` | Jede echte XLSX-Packungszeile und jede Limitierungszeile, Original-FHIR-Stream und unabhängige Zählkontrollen |
 | `tests/browser.mjs` | Isolierte native Browser-Akzeptanz, alle Seiten/Packungen, Datenaktionen, Speicherschäden, vier Breiten und interne Laufzeitmessungen |
 | `tests/detail-races.mjs` | Über `tests/browser.mjs` registrierte native Detail-Races: verspäteter Fehler/Erfolg sowie aktueller Fehler mit echtem Neuversuch, jeweils in frischem Kontext |
+| `tests/import-races.mjs` | Registrierte native Dateiimport-Races mit synthetischen Sicherungen: überholter Erfolg/Parsefehler, Bestätigung und Neuladen sowie aktuelle Import-/Abbruchkontrollen |
 | `public/data/import-report.json` | Maschinenlesbare exakte Statistik, Quellprüfsummen, Artefaktgrössen und Abweichungen |
 
 ## Laufzeit und Datenaufteilung
@@ -39,6 +40,8 @@ Namespace: **`sl.workspace.v1`**, Schema 1. Importiert werden nur exakt erlaubte
 Der CSV-Schutz berücksichtigt auch Formeln nach führenden Leer-/Whitespacezeichen in Sammlungsnotizen, Bezeichnungen, Positionsnotizen und Favoritenkennungen. Die Importdekodierung stellt alle Originalzeichen unverändert wieder her; `tests/regression.test.mjs` und die native PP-/FAP-Sortierkontrolle in `tests/browser.mjs` sichern beide Randfälle ab.
 
 Jeder Speicherzugriff ist geschützt. Unlesbare/kaputte Original-Rohstrings bleiben erhalten, automatische Writes pausieren. Bei einem `storage`-Ereignis wird nicht blind fremder Zustand geladen: Schreiben pausiert, Export/Neuladen werden angeboten. Direkt vor einem Write wird der Rohwert erneut mit der gelesenen Baseline verglichen. Das ist **keine** registerkartenübergreifende atomare Compare-and-swap-Garantie. Ein expliziter Import erfordert Vorschau, Vorher-Sicherungsdownload (wenn ein Rohstand existiert) und erneute Prüfung direkt vor dem Ersetzen. Fehlgeschlagene Speicherung wird nicht als erfolgreiche Übernahme gemeldet.
+
+Jede Dateiauswahl besitzt einen `importToken`. Nach dem asynchronen Lesen darf nur die jüngste Auswahl die Importvorschau und den bestätigbaren Zustand setzen oder einen Importfehler anzeigen. Ein verspäteter gültiger Import darf keine neuere Sicherung ersetzen; ein verspäteter Parsefehler darf deren Bestätigung nicht stilllegen. Die nativen Import-Races halten nur die Auslieferung eines echten `File.text()`-Resultats zurück und prüfen nach Erledigung beider ursprünglicher Change-Handler die echte Bestätigung, den gespeicherten synthetischen Zustand und dessen Wiederherstellung nach Neuladen.
 
 Preise sind entweder ganze Rappen oder `null`. Jede Zeile ist `BigInt(Rappen) × BigInt(Packungen)`; erst dann werden die Zeilen addiert. Der Formatierer hält die Nachkommastellen exakt, auch über `Number.MAX_SAFE_INTEGER` hinaus. Keine vom Benutzer importierten Preise oder historischen Bezeichnungen überschreiben aktuelle Quellenpreise. Druck-/CSV-/JSON-Snapshots werden jeweils bei der tatsächlichen Aktion aus dem aktuellen Zustand erzeugt.
 

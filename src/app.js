@@ -14,7 +14,7 @@ function el(tag, attrs={}, ...children) {
   return node;
 }
 const btn=(text,fn,attrs={})=>el('button',{type:'button',onclick:fn,...attrs},text);
-let index, catalog, page=0, detailToken=0, pending=null, toastTimer;
+let index, catalog, page=0, detailToken=0, importToken=0, pending=null, toastTimer;
 const PAGE_SIZE=40;
 let storage;
 try {storage=window.localStorage;} catch {storage={getItem(){throw new Error('blocked');},setItem(){throw new Error('blocked');}};}
@@ -147,15 +147,16 @@ function bind() {
   $('print').onclick=()=>{preparePrint();window.print();};window.addEventListener('beforeprint',preparePrint);
   window.addEventListener('storage',event=>{if(event.key===STORAGE_KEY||event.key===null){store.externalChange();storageStatus();}});
   $('import-file').addEventListener('change',async event=>{
-    const file=event.target.files?.[0];event.target.value='';if(!file)return;
+    const file=event.target.files?.[0];event.target.value='';if(!file)return;const token=++importToken;
     try {
       if(file.size>12000000)throw new Error('Maximal 12 MB pro Sicherung.');
-      const valid=parseImport(await file.text(),file.name),raw=storage.getItem(STORAGE_KEY);
+      const valid=parseImport(await file.text(),file.name);if(token!==importToken)return;
+      const raw=storage.getItem(STORAGE_KEY);
       if(raw!==store.raw)throw new Error('Speicher wurde in einer anderen Registerkarte geändert. Erst sichern und neu laden.');
       pending={value:valid,raw,backedUp:raw===null};
       $('import-summary').textContent=`${valid.lines.length} Position(en), ${valid.favorites.length} Favorit(en), ${valid.lines.filter(l=>!index.packages.has(l.id)).length} unbekannte Kennung(en). Vorhandene Sammlung wird erst nach Bestätigung ersetzt.`;
       $('backup-before-import').disabled=raw===null;$('import-confirm').disabled=!pending.backedUp;$('import-dialog').showModal();
-    } catch(e) {pending=null;toast('Import abgelehnt: '+e.message);}
+    } catch(e) {if(token!==importToken)return;pending=null;toast('Import abgelehnt: '+e.message);}
   });
   $('backup-before-import').onclick=()=>{if(!pending)return;download('sl-vor-import-speicher.txt',pending.raw??'','text/plain');pending.backedUp=true;$('import-confirm').disabled=false;};
   $('import-cancel').onclick=()=>{pending=null;$('import-dialog').close();};

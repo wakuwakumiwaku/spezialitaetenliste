@@ -5,6 +5,7 @@ import {pathToFileURL,fileURLToPath} from 'node:url';
 import {createAppServer} from '../scripts/serve.mjs';
 import {emptyWorkspace,exportCSV,money,createIndex,searchPackages} from '../src/domain.js';
 import {testDetailRaces} from './detail-races.mjs';
+import {testImportRaces} from './import-races.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url)),run=process.env.BROWSER_RUN||new Date().toISOString().replace(/[:.]/g,'-'),evidence=join(root,'.local/browser',run);await mkdir(evidence,{recursive:true});
 if(!process.env.PLAYWRIGHT_MODULE || !process.env.BROWSER_EXECUTABLE)throw new Error('Set PLAYWRIGHT_MODULE and BROWSER_EXECUTABLE for an owned headless Firefox/Camoufox process.');
 const {firefox}=await import(pathToFileURL(process.env.PLAYWRIGHT_MODULE));
@@ -25,6 +26,7 @@ try{
  browser=await firefox.launch({executablePath:process.env.BROWSER_EXECUTABLE,headless:true});
  report.browserVersion=browser.version();report.nodeVersion=process.version;
  await testDetailRaces({browser,url,catalog,texts,report,watch,check,screenshot});
+ await testImportRaces({browser,url,report,watch,check});
  // Preserve the original startup-only request oracle after the fresh race contexts.
  requests.length=0;
  const context=await browser.newContext({viewport:{width:1440,height:1000},acceptDownloads:true});const page=await context.newPage();watch(page);
