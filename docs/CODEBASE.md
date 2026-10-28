@@ -47,7 +47,7 @@ Preise sind entweder ganze Rappen oder `null`. Jede Zeile ist `BigInt(Rappen) ×
 
 ## Build und Veröffentlichung
 
-`dist/` enthält nur `artifactFiles` aus `scripts/files.mjs`. Nie rekursiv `sources/`, `.local/`, Profile, Projektdateien oder das 188-MB-Archiv kopieren. Der rohe 93-MB-FHIR-Text gehört nicht in den öffentlichen Build; der Originaldownload ist ausdrücklich gzip-komprimiert. Build-/Quell-/Browserartefakte sind getrennt.
+`dist/` enthält nur `artifactFiles` aus `scripts/files.mjs`. Der Build erstellt die vollständige Allowlist nach der Datenprüfung zuerst in einem eigenen `.dist-build-*`-Zwischenverzeichnis. Ein fehlender oder unlesbarer Laufzeitinput darf den vorherigen Build nicht löschen. Erst die vollständige Ausgabe ersetzt `dist/`; bei einem Publikationsfehler wird der beiseitegelegte vorherige Build zurückverschoben. Scheitert auch das Zurückverschieben, bleibt er am ausdrücklich gemeldeten Sicherungspfad erhalten. `tests/build-integrity.test.mjs` prüft echte CLI-Fehler und bytegenaue Artefakt-Manifeste sowie erfolgreiche Ersatz-Builds; dies ist keine Garantie unter Prozessabbruch oder für gleichzeitige Builds. Nie rekursiv `sources/`, `.local/`, Profile, Projektdateien oder das 188-MB-Archiv kopieren. Der rohe 93-MB-FHIR-Text gehört nicht in den öffentlichen Build; der Originaldownload ist ausdrücklich gzip-komprimiert. Build-/Quell-/Browserartefakte sind getrennt.
 
 Der Pages-Workflow nutzt Node 22/Python 3.12, führt `npm ci`, Checks/Tests/Build aus und lädt ausschliesslich `dist/` hoch. Build hat `contents: read`, `pages: read`; Deploy nur `pages: write`, `id-token: write`. Keine Zugangsdaten im Repository. Der lokale Server liefert nur dieselbe Allowlist unter `/spezialitaetenliste/`.
 
