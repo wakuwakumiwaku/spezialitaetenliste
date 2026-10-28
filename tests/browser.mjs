@@ -25,6 +25,42 @@ async function download(page,action,name){const waiting=page.waitForEvent('downl
 try{
  browser=await firefox.launch({executablePath:process.env.BROWSER_EXECUTABLE,headless:true});
  report.browserVersion=browser.version();report.nodeVersion=process.version;
+ const driftContext=await browser.newContext({viewport:{width:1440,height:1000},acceptDownloads:true});
+ try {
+  const local=await driftContext.newPage();watch(local);await local.goto(url);await ready(local);
+  await local.locator('#workspace-note').fill('Synthetic original note');
+  const other=await driftContext.newPage();watch(other);await other.goto(url);await ready(other);
+  // Hold only storage-event notification; real second-page writes, draft
+  // handlers, exports and reload all execute through the native platform.
+  await local.evaluate(()=>{
+   window.__heldStorageEvents=0;window.__driftInputs=[];
+   document.querySelector('#workspace-note').addEventListener('input',event=>window.__driftInputs.push(event.target.value),true);
+   window.addEventListener('storage',event=>{
+    if(event.key==='sl.workspace.v1'){window.__heldStorageEvents++;event.stopImmediatePropagation();}
+   },true);
+  });
+  await other.locator('#workspace-note').fill('Synthetic external note');
+  await local.waitForFunction(()=>window.__heldStorageEvents>0);
+  const externalRaw=await raw(other);
+  assert.equal(await local.locator('#storage-warning').isVisible(),false);
+  // One keystroke is important: Firefox fill() can emit multiple input
+  // events, and a later one would take the existing paused-draft path.
+  await local.locator('#workspace-note').press('End');await local.locator('#workspace-note').press('!');
+  const draft='Synthetic original note!';
+  report.storageDriftInputs=await local.evaluate(()=>window.__driftInputs);
+  assert.deepEqual(report.storageDriftInputs,[draft],'exercise exactly the first edit detecting drift');
+  assert.equal(await raw(local),externalRaw);
+  assert.equal(await local.locator('#storage-warning').isVisible(),true);
+  assert.equal(await local.locator('#workspace-note').inputValue(),draft);
+  const json=await download(local,()=>local.locator('#export-json').click(),'storage-drift-local-draft.json');
+  assert.deepEqual(JSON.parse(json),{...emptyWorkspace(),note:draft},'the edit detecting drift must be present in the actual JSON download');
+  const csv=await download(local,()=>local.locator('#export-csv').click(),'storage-drift-local-draft.csv');
+  assert.ok(csv.includes('"'+draft+'"'),'CSV must also preserve the refused local draft');
+  await local.locator('#workspace-note').fill('Synthetic continued local note');assert.equal(await raw(local),externalRaw);
+  await local.reload();await ready(local);
+  assert.equal(await local.locator('#workspace-note').inputValue(),'Synthetic external note');assert.equal(await raw(local),externalRaw);
+  check('Pre-event storage drift preserves external raw bytes and current local note in genuine JSON/CSV downloads');
+ } finally {await driftContext.close();}
  await testDetailRaces({browser,url,catalog,texts,report,watch,check,screenshot});
  await testImportRaces({browser,url,report,watch,check});
  // Preserve the original startup-only request oracle after the fresh race contexts.

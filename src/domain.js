@@ -111,7 +111,7 @@ export class WorkspaceStore {
     const valid=validateWorkspace(next);
     if (this.paused && !recovery) {this.value=valid;return false;}
     try {
-      if(this.storage.getItem(STORAGE_KEY)!==this.raw) {this.externalChange();return false;}
+      if(this.storage.getItem(STORAGE_KEY)!==this.raw) {this.externalChange();if(!recovery)this.value=valid;return false;}
       const raw=JSON.stringify(valid);this.storage.setItem(STORAGE_KEY,raw);
       this.raw=raw;this.value=valid;this.paused=false;this.problem='';return true;
     } catch {this.paused=true;this.problem='Speichern blockiert oder Speicher voll. Arbeit exportieren; vorhandener Speicher bleibt unverändert.';if(!recovery)this.value=valid;return false;}
