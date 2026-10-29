@@ -27,13 +27,13 @@ function storageStatus() {
   const w=$('storage-warning');w.hidden=!store.problem;w.replaceChildren();
   if(store.problem)w.append(...[el('span',{},store.problem),btn('Arbeit als JSON sichern',()=>exportJSON()),store.raw!==null?btn('Unveränderten Speicher sichern',()=>download('sl-speicher-original.txt',store.raw,'text/plain')):null,btn('Neu laden',()=>location.reload())].filter(Boolean));
 }
-function commit(mutator) {
+function commit(mutator,refreshResults=false) {
   const next=structuredClone(store.value),before=store.value;
-  try {mutator(next);store.replace(next);storageStatus();renderCollection();renderResults();return store.value!==before;}
+  try {mutator(next);store.replace(next);storageStatus();renderCollection();if(refreshResults)renderResults();return store.value!==before;}
   catch(e){toast(e.message);return false;}
 }
 function saveDraft(next){try{store.replace(next);storageStatus();}catch(e){toast(e.message);}}
-function toggleFavorite(id) {commit(v=>{const i=v.favorites.indexOf(id);if(i<0)v.favorites.push(id);else v.favorites.splice(i,1);});}
+function toggleFavorite(id) {commit(v=>{const i=v.favorites.indexOf(id);if(i<0)v.favorites.push(id);else v.favorites.splice(i,1);},true);}
 function addPackage(p) {
   if(!index)return;
   const changed=commit(v=>{const line=v.lines.find(l=>l.id===p.id);if(line){if(line.quantity===9999)throw new Error('Maximal 9999 Packungen.');line.quantity++;}else v.lines.push({id:p.id,quantity:1,label:packageName(p),note:''});});

@@ -15,6 +15,8 @@
 | `scripts/files.mjs`, `build.mjs` | Explizite Build-Allowlist; nur Laufzeitdateien und dokumentierte amtliche Daten nach `dist/` |
 | `scripts/serve.mjs` | Exportiertes `createAppServer`, Loopback, Host-/Pfad-/Methodengrenzen und Repository-Unterpfad |
 | `tests/*.test.mjs` | Domain-/Such-/Speicher-/Export-/Serverregressionen, echte Katalogdaten |
+| `tests/app-fixture.mjs` | Offline DOM-Strukturmodell für die registrierten App-Regressionen; echter Start und echte Handler, synthetische Plattformgrenzen, keine native Browser-/Fokusmessung |
+| `tests/collection-results.test.mjs` | Katalogknoten bei Sammlungsänderungen, unabhängiger Favoriten-/Import-Refresh und unveränderte Speicherverweigerung |
 | `tests/test_import_catalog.py` | Jede echte XLSX-Packungszeile und jede Limitierungszeile, Original-FHIR-Stream und unabhängige Zählkontrollen |
 | `tests/browser.mjs` | Isolierte native Browser-Akzeptanz, alle Seiten/Packungen, Datenaktionen, Speicherschäden, vier Breiten und interne Laufzeitmessungen |
 | `tests/detail-races.mjs` | Über `tests/browser.mjs` registrierte native Detail-Races: verspäteter Fehler/Erfolg sowie aktueller Fehler mit echtem Neuversuch, jeweils in frischem Kontext |
@@ -24,6 +26,8 @@
 ## Laufzeit und Datenaufteilung
 
 Die Startdatei `catalog.json.gz` enthält alle Präparate-/Packungssummaries und Lookup-Schlüssel. Der einmalig normalisierte Suchindex durchsucht Namen, Wirkstoffe und Codes, niemals die langen Limitierungstexte. Die Preis-Sortierfolgen werden einmal aufgebaut; Filtern erfordert keine neue Sortierung. Suche ändert nicht die Sammlungs-DOM. Unmittelbare Eingabe-/Filter-/Reset-/Seitennavigationshandler haben keine ausstehenden Debounce-Aufträge.
+
+Sammlungsänderungen (Hinzufügen, Menge, Entfernen, Leeren) durchsuchen den Katalog nicht erneut und behalten dessen vorhandene DOM-Knoten. `commit(mutator,refreshResults=false)` aktualisiert weiterhin Sammlung und Speicherwarnung; nur `toggleFavorite` setzt das Refresh-Argument auf `true`, da Favoriten Treffer und Schaltflächen beeinflussen. Künftige Mutationen von Trefferabhängigkeiten müssen ebenfalls ausdrücklich aktualisieren. Bestätigte Import-Ersetzungen behalten ihren unabhängigen Refresh beider Panels. Kein zusätzlicher Cache oder Debounce. `tests/collection-results.test.mjs` prüft die echten registrierten Aufrufer, alle drei Sortierungen, Favoritenumfang/Seitenbegrenzung, vollständige Packungsreihenfolge, Import und Speicherverweigerung im Strukturmodell. Die Sammlung selbst wird weiterhin neu aufgebaut; ein Erhalt ihres Eingabecursors oder eine native Paint-/Latenzgarantie wird damit nicht behauptet.
 
 Es werden höchstens 40 Katalogpackungen angezeigt. Die Trefferzahl gilt immer für den vollständigen Katalog; 259 Seiten erschliessen den kompletten ungefilterten Stand. Nur unmittelbar benachbarte Packungen derselben tatsächlichen MedicinalProduct-ID werden gruppiert. Preis-Sortierungen behalten dadurch ihre globale Packungsreihenfolge, auch wenn ein Präparat an mehreren Stellen erscheint. Weitere Packungen desselben Präparats sind in den Details anwählbar.
 
